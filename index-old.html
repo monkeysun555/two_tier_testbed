@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>360V redering and canvas over MSE framework demo</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				color: #ffffff;
+				padding: 5px;
+				font-family:Monospace;
+				font-size:13px;
+				font-weight: bold;
+				text-align:center;
+			}
+
+			a {
+				color: #ffffff;
+			}
+		</style>
+	</head>
+	<body>
+	<video id="video" controls width="40%"></video>
+	<canvas id="c1"></canvas>
+	<div id="container"></div>
+	<script src="three.js"></script>
+	<script src="http://vjs.zencdn.net/6.2.7/video.js"></script>
+	<script src="videojs-vr.js"></script>
+	<script src="dash.all.debug.js"></script>
+	<script src="videojs-dash.min.js"></script>
+	<script src="simple-statistics.js"></script>
+
+
+    <script type="text/javascript">
+    (function() {
+      var baseUrl = 'https://bitdash-a.akamaihd.net/content/MI201109210084_1/video/720_2400000/dash/';
+      var initUrl = baseUrl + 'init.mp4';
+      var templateUrl = baseUrl + 'segment_$Number$.m4s';
+      var sourceBuffer;
+      var index = 0;
+      var numberOfChunks = 52;
+      var video = document.querySelector('video');
+      if (!window.MediaSource) {
+        console.error('No Media Source API available');
+        return;
+      }
+      var ms = new MediaSource();
+      video.src = window.URL.createObjectURL(ms);
+      ms.addEventListener('sourceopen', onMediaSourceOpen);
+      function onMediaSourceOpen() {
+        sourceBuffer = ms.addSourceBuffer('video/mp4; codecs="avc1.4d401f"');
+        sourceBuffer.addEventListener('updateend', nextSegment);
+        GET(initUrl, appendToBuffer);
+        video.play();
+      }
+      function nextSegment() {
+        var url = templateUrl.replace('$Number$', index);
+        GET(url, appendToBuffer);
+        index++;
+        if (index > numberOfChunks) {
+          sourceBuffer.removeEventListener('updateend', nextSegment);
+        }
+      }
+      function appendToBuffer(videoChunk) {
+        if (videoChunk) {
+          sourceBuffer.appendBuffer(new Uint8Array(videoChunk));
+        }
+      }
+
+      function GET(url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url);
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function(e) {
+          if (xhr.status != 200) {
+            console.warn('Unexpected status code ' + xhr.status + ' for ' + url);
+            return false;
+          }
+          callback(xhr.response);
+        };
+        xhr.send();
+      }
+    })();
+  </script>
+	<script> 
+		document.addEventListener('DOMContentLoaded', function(){
+			var v1 = document.getElementById('video');
+			var canvas1 = document.getElementById('c1');
+			var context1 = canvas1.getContext('2d');
+			
+			var ew, eh;
+			
+			v1.addEventListener('play', function()
+			{
+
+				ew = v1.clientWidth;
+				eh = v1.clientHeight;
+
+				canvas1.width = ew;
+				canvas1.height = eh;
+
+				init();
+
+				draw(v1, context1, ew, eh);
+
+			
+			// animate();
+
+
+
+			},false);
+
+
+
+		},false);
+		
+
+
+
+			var camera, scene, renderer;
+
+			var texture_placeholder,
+			isUserInteracting = false,
+			onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+			lon = 0, onMouseDownLon = 0,
+			lat = 0, onMouseDownLat = 0,
+			phi = 0, theta = 0,
+			distance = 50,
+			onPointerDownPointerX = 0,
+			onPointerDownPointerY = 0,
+			onPointerDownLon = 0,
+			onPointerDownLat = 0;
+
+			// init();
+			// animate();
+
+			function init() {
+
+				var container, mesh;
+
+				container = document.getElementById( 'container' );
+
+				camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1100 );
+				camera.target = new THREE.Vector3( 0, 0, 0 );
+
+				scene = new THREE.Scene();
+
+				var geometry = new THREE.SphereBufferGeometry( 500, 60, 40 );
+				// invert the geometry on the x-axis so that all of the faces point inward
+				geometry.scale( - 1, 1, 1 );
+
+				// var video = document.createElement( 'video' );
+				// video.width = 640;
+				// video.height = 360;
+				// video.loop = true;
+				// video.muted = true;
+				// video.src = 'http://localhost/wwwroot/arresting_a_man1.mp4';
+				// video.setAttribute( 'webkit-playsinline', 'webkit-playsinline' );
+				// video.play();
+
+				var canvas1 = document.getElementById( 'c1' );
+				var texture = new THREE.CanvasTexture( canvas1 )
+
+
+
+				// var texture = new THREE.VideoTexture( video );
+				texture.minFilter = THREE.LinearFilter;
+				texture.format = THREE.RGBFormat;
+
+				var material   = new THREE.MeshBasicMaterial( { map : texture } );
+
+				mesh = new THREE.Mesh( geometry, material );
+
+				scene.add( mesh );
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+				document.addEventListener( 'wheel', onDocumentMouseWheel, false );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function onDocumentMouseDown( event ) {
+
+				event.preventDefault();
+
+				isUserInteracting = true;
+
+				onPointerDownPointerX = event.clientX;
+				onPointerDownPointerY = event.clientY;
+
+				onPointerDownLon = lon;
+				onPointerDownLat = lat;
+
+			}
+
+			function onDocumentMouseMove( event ) {
+
+				if ( isUserInteracting === true ) {
+
+					lon = ( onPointerDownPointerX - event.clientX ) * 0.1 + onPointerDownLon;
+					lat = ( event.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
+
+				}
+
+			}
+
+			function onDocumentMouseUp( event ) {
+
+				isUserInteracting = false;
+
+			}
+
+			function onDocumentMouseWheel( event ) {
+
+				distance += event.deltaY * 0.05;
+
+				distance = THREE.Math.clamp( distance, 1, 50 );
+
+			}
+
+			function animate() {
+
+				// requestAnimationFrame( animate );
+				update();
+
+			}
+
+			function update() {
+
+				lat = Math.max( - 85, Math.min( 85, lat ) );
+				phi = THREE.Math.degToRad( 90 - lat );
+				theta = THREE.Math.degToRad( lon );
+
+				camera.position.x = distance * Math.sin( phi ) * Math.cos( theta );
+				camera.position.y = distance * Math.cos( phi );
+				camera.position.z = distance * Math.sin( phi ) * Math.sin( theta );
+
+				camera.lookAt( camera.target );
+
+				var geometry = new THREE.SphereBufferGeometry( 500, 60, 40 );
+				geometry.scale( - 1, 1, 1 );
+
+				var canvas1 = document.getElementById( 'c1' );
+				var texture = new THREE.CanvasTexture( canvas1 );
+				var material   = new THREE.MeshBasicMaterial( { map : texture } );
+
+				var scene = new THREE.Mesh( geometry, material );
+
+				// mesh = new THREE.Mesh( geometry, material );
+
+				// scene =  mesh;
+
+
+				renderer.render(scene, camera);
+				//renderer.clear();
+				geometry.dispose();
+                geometry = undefined;
+
+                material.dispose();
+                material = undefined;
+
+                texture.dispose();
+                texture = undefined;
+
+				// renderer.setRanderTarget(null);
+
+			}
+
+		function draw(v1,c1,w,h) 
+		{
+			if(v1.paused || v1.ended)	return false;
+		
+			// c1.drawImage(v2,0,0,w,h);
+			// c1.drawImage(v1,100,100,ew, eh);
+			c1.drawImage(v1,0,0,w, h);
+
+			update();
+
+		    setTimeout(draw,20,v1,c1,w,h);
+		}
+
+		</script>
+	</body>
+</html>

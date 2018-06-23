@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>360V redering and canvas over MSE framework demo</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				color: #ffffff;
+				padding: 5px;
+				font-family:Monospace;
+				font-size:13px;
+				font-weight: bold;
+				text-align:center;
+			}
+
+			a {
+				color: #ffffff;
+			}
+		</style>
+	</head>
+	<body>
+    <video id="video1" controls width="40%"></video>
+    <video id="video2" controls width="40%"></video>
+    <!-- <video id="video2" controls autoplay width="40%" source src=http://localhost/wwwroot/arresting_a_man1.mp4 type=video/mp4> </video> -->
+	
+	<canvas id="c1"></canvas>
+	<div id="container"></div>
+	<script src="three.js"></script>
+	<!-- <script src="http://vjs.zencdn.net/6.2.7/video.js"></script> -->
+	<!-- <script src="videojs-vr.js"></script> -->
+	<!-- <script src="dash.all.debug.js"></script> -->
+	<!-- <script src="videojs-dash.min.js"></script> -->
+	<script src="simple-statistics.js"></script>
+
+
+    <script src="canvas.js"></script>
+	</body>
+</html>
